@@ -1065,5 +1065,42 @@ document.getElementById('clearHistoryBtn').onclick = (e) => {
   });
 };
 </script>
+ <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdlKJg9cdXen0CNZdlnWU-6r5ym7UiwJE",
+    authDomain: "bambamai-29f3f.firebaseapp.com",
+    projectId: "bambamai-29f3f",
+    storageBucket: "bambamai-29f3f.firebasestorage.app",
+    messagingSenderId: "1040838702888",
+    appId: "1:1040838702888:web:84c9e13503071bc9aa421d",
+    measurementId: "G-615KLT3ELS"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+
+  // Global variables aur functions ko attach karna taaki baki code use kar sake
+  window.auth = auth;
+  window.db = db;
+  window.provider = provider;
+  window.signInWithPopup = signInWithPopup;
+  window.signOut = signOut;
+  window.onAuthStateChanged = onAuthStateChanged;
+  window.doc = doc;
+  window.setDoc = setDoc;
+  window.getDoc = getDoc;
+
+  console.log("Firebase initialized successfully!");
+</script>
 </body>
 </html>
