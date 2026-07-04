@@ -1428,21 +1428,6 @@ document.getElementById('clearHistoryBtn').onclick = (e) => {
       }
     }
   });
-  // --- ADMIN AND DATABASE LOGIC ---
-  const adminLoginBtn = document.getElementById('adminLoginBtn');
-  const adminPanel = document.getElementById('adminPanel');
-
-  if(adminLoginBtn) {
-    adminLoginBtn.onclick = () => {
-      const password = prompt("Enter Admin Password:");
-      if (password === "12345") { // <--- Aap apna secret password yahan badal sakte hain
-        adminPanel.style.display = 'block';
-        loadAdminModels(); 
-      } else {
-        alert("Wrong Password!");
-      }
-    };
-  }
 
   // Firebase se Firestore database tools manga rahe hain
   import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.3/firebase-firestore.js";
