@@ -1333,7 +1333,26 @@ document.getElementById('clearHistoryBtn').onclick = (e) => {
 
   </div>
 </div>
+</div>
+</div>
 
+<div id="adminPanel" style="margin: 20px; padding: 20px; border: 1px solid var(--border-tint); border-radius: 12px; background: var(--panel); color: var(--text-primary); display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.5); position: relative; z-index: 10000;">
+  <h3 style="margin-top: 0; color: var(--purple);">BAMBAMAI - Admin Control Panel</h3>
+  <p style="font-size: 13px; color: var(--text-secondary);">Manage AI Models and API Keys in Real-time</p>
+  <hr style="border: 0; border-top: 1px solid var(--border-tint); margin: 15px 0;">
+  
+  <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+    <input type="text" id="newAiName" placeholder="Display Name" style="padding: 8px 12px; background: var(--bg-deep); border: 1px solid var(--border-tint); border-radius: 6px; color: #fff;">
+    <input type="text" id="newAiModel" placeholder="Model ID" style="padding: 8px 12px; background: var(--bg-deep); border: 1px solid var(--border-tint); border-radius: 6px; color: #fff;">
+    <input type="text" id="newAiUrl" placeholder="Base URL" style="padding: 8px 12px; background: var(--bg-deep); border: 1px solid var(--border-tint); border-radius: 6px; color: #fff; flex: 1;">
+    <input type="text" id="newAiKey" placeholder="API Key" style="padding: 8px 12px; background: var(--bg-deep); border: 1px solid var(--border-tint); border-radius: 6px; color: #fff; flex: 1;">
+    <button onclick="addNewAiModel()" style="padding: 8px 16px; background: var(--blue); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Add Model</button>
+  </div>
+  <ul id="adminModelList" style="padding-left: 20px; margin: 0;"></ul>
+</div>
+
+<button id="adminLoginBtn" style="position: fixed; bottom: 15px; left: 15px; opacity: 0.2; background: var(--panel); color: var(--text-secondary); border: 1px solid var(--border-tint); font-size: 11px; padding: 5px 10px; cursor: pointer; border-radius: 6px; z-index: 9999;">Admin Panel</button>
+<script type="module">
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
