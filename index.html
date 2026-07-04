@@ -1498,5 +1498,108 @@ document.getElementById('clearHistoryBtn').onclick = (e) => {
     }
   });
 </script>
+</div> <div id="adminPanel" style="margin: 20px; padding: 20px; border: 1px solid var(--border-tint); border-radius: 12px; background: var(--panel); color: var(--text-primary); display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+    <h3 style="margin-top: 0; color: var(--purple);">BAMBAMAI - Admin Control Panel</h3>
+    <p style="font-size: 13px; color: var(--text-secondary);">Manage AI Models and API Keys in Real-time</p>
+    <hr style="border: 0; border-top: 1px solid var(--border-tint); margin: 15px 0;">
+    
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+      <input type="text" id="newAiName" placeholder="Display Name (e.g., GPT-4o)" style="padding: 8px 12px; background: var(--bg-deep); border: 1px solid var(--border-tint); border-radius: 6px; color: #fff;">
+      <input type="text" id="newAiModel" placeholder="Model ID (e.g., gpt-4o)" style="padding: 8px 12px; background: var(--bg-deep); border: 1px solid var(--border-tint); border-radius: 6px; color: #fff;">
+      <input type="text" id="newAiUrl" placeholder="Base URL (e.g., https://api.openai.com/v1)" style="padding: 8px 12px; background: var(--bg-deep); border: 1px solid var(--border-tint); border-radius: 6px; color: #fff; flex: 1;">
+      <input type="text" id="newAiKey" placeholder="API Key" style="padding: 8px 12px; background: var(--bg-deep); border: 1px solid var(--border-tint); border-radius: 6px; color: #fff; flex: 1;">
+      <button onclick="addNewAiModel()" style="padding: 8px 16px; background: var(--blue); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Add Model</button>
+    </div>
+    
+    <h4 style="margin-bottom: 10px; color: var(--cyan);">Active Models List:</h4>
+    <ul id="adminModelList" style="padding-left: 20px; margin: 0;"></ul>
+  </div>
+
+  <button id="adminLoginBtn" style="position: fixed; bottom: 15px; left: 15px; opacity: 0.2; background: transparent; color: var(--text-secondary); border: 1px solid var(--border-tint); font-size: 10px; padding: 4px 8px; cursor: pointer; border-radius: 4px; z-index: 9999;">Admin Panel</button>
+  <script type="module">
+    
+    // ... Iske andar aapka firebase init, login logic, aur onAuthStateChanged chal raha hai ...
+    // ... Chalte chalte jab aap bilkul niche pahunchenge ...
+
+
+    // ================= 2. JAVASCRIPT CONTROL CODE (Yahan Paste Karein) =================
+    const secretAdminBtn = document.getElementById('adminLoginBtn');
+    const mainAdminPanel = document.getElementById('adminPanel');
+
+    if (secretAdminBtn) {
+      secretAdminBtn.onclick = () => {
+        const pass = prompt("Enter Admin Secret Password:");
+        if (pass === "12345") {
+          if (mainAdminPanel) mainAdminPanel.style.display = 'block';
+          if (typeof window.loadAdminModels === 'function') window.loadAdminModels();
+        } else {
+          alert("Access Denied!");
+        }
+      };
+    }
+
+    let firestoreDb;
+    import("https://www.gstatic.com/firebasejs/11.0.3/firebase-firestore.js").then((fs) => {
+      if (typeof app !== 'undefined') {
+        firestoreDb = fs.getFirestore(app);
+
+        fs.onSnapshot(fs.collection(firestoreDb, "ai_models"), (snapshot) => {
+          const providerSelect = document.getElementById('providerSelect');
+          if (!providerSelect) return;
+          providerSelect.innerHTML = '';
+          window.globalProviders = {};
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            const option = document.createElement('option');
+            option.value = doc.id;
+            option.innerText = data.name;
+            providerSelect.appendChild(option);
+            window.globalProviders[doc.id] = data;
+          });
+        });
+
+        window.addNewAiModel = async function() {
+          const name = document.getElementById('newAiName').value;
+          const model = document.getElementById('newAiModel').value;
+          const url = document.getElementById('newAiUrl').value;
+          const key = document.getElementById('newAiKey').value;
+          if (!name || !model || !url || !key) { alert("Saari fields fill kijiye!"); return; }
+          const docId = model.toLowerCase().replace(/\s+/g, '-');
+          try {
+            await fs.setDoc(fs.doc(firestoreDb, "ai_models", docId), { name, model, baseUrl: url, apiKey: key });
+            alert("AI Model added successfully!");
+            document.getElementById('newAiName').value = '';
+            document.getElementById('newAiModel').value = '';
+            document.getElementById('newAiUrl').value = '';
+            document.getElementById('newAiKey').value = '';
+          } catch (e) { alert("Database Error: " + e.message); }
+        };
+
+        window.removeAiModel = async function(id) {
+          if (confirm("Kya aap sach mein is AI model ko delete karna chahte hain?")) {
+            try { await fs.deleteDoc(fs.doc(firestoreDb, "ai_models", id)); alert("AI Model deleted!"); } catch (e) { alert("Delete Error: " + e.message); }
+          }
+        };
+
+        window.loadAdminModels = function() {
+          fs.onSnapshot(fs.collection(firestoreDb, "ai_models"), (snapshot) => {
+            const adminList = document.getElementById('adminModelList');
+            if (!adminList) return;
+            adminList.innerHTML = '';
+            snapshot.forEach((doc) => {
+              const data = doc.data();
+              const li = document.createElement('li');
+              li.style.marginBottom = "8px";
+              li.innerHTML = `<span>${data.name} (${data.model})</span> <button onclick="removeAiModel('${doc.id}')" style="margin-left: 15px; background: transparent; color: #ef4444; border: 1px solid #ef4444; border-radius: 4px; padding: 2px 6px; font-size: 11px; cursor: pointer;">Remove</button>`;
+              adminList.appendChild(li);
+            });
+          });
+        };
+      }
+    }).catch(err => console.error("Firestore initialization blocked:", err));
+    // =========================================================================================
+
+  </script> </body>
+</html>
 </body>
 </html>
