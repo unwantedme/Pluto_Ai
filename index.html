@@ -1401,6 +1401,46 @@ document.getElementById('clearHistoryBtn').onclick = (e) => {
       authContainer.style.display = 'flex';
     }
   });
+// Automatic Login/Logout (Buttons Hide/Show Logic)
+  onAuthStateChanged(auth, (user) => {
+    const mainLoginBtn = document.getElementById('loginBtn');
+    const mainSignUpBtn = document.getElementById('signupBtn'); // Sign Up Free Button
+
+    if (user) {
+      // 1. Agar user logged in hai, toh parda hatao
+      if(typeof authContainer !== 'undefined') authContainer.style.display = 'none'; 
+      
+      // 2. Login button ko Logout banao
+      if(mainLoginBtn) {
+        mainLoginBtn.innerText = "Logout";
+        mainLoginBtn.onclick = () => {
+          auth.signOut().then(() => { alert("Logged out successfully!"); });
+        };
+      }
+      
+      // 3. Sign Up Free button ko bilkul CHUPAO (Hide)
+      if(mainSignUpBtn) {
+        mainSignUpBtn.style.display = 'none';
+      }
+
+    } else {
+      // 4. Agar user logged out hai, toh parda dikhao
+      if(typeof authContainer !== 'undefined') authContainer.style.display = 'flex';
+      
+      // 5. Logout hone par wapas normal Login button banao
+      if(mainLoginBtn) {
+        mainLoginBtn.innerText = "Login";
+        mainLoginBtn.onclick = () => { 
+          if(typeof authContainer !== 'undefined') authContainer.style.display = 'flex'; 
+        };
+      }
+      
+      // 6. Logout hone par Sign Up button ko WAPAS DIKHAO
+      if(mainSignUpBtn) {
+        mainSignUpBtn.style.display = 'inline-block';
+      }
+    }
+  });
 </script>
 </body>
 </html>
