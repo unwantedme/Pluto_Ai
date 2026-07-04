@@ -1335,10 +1335,13 @@ document.getElementById('clearHistoryBtn').onclick = (e) => {
 </div>
 
 <script type="module">
+<script type="module">
+  // 1. FIREBASE IMPORTS (Sab kuch ek sath)
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-  // !!! APNI SCREEN SE MILI HUI REAL CONFIG KEYS YAHA DALAIN !!!
+  // 2. APNI REAL CONFIG KEYS YAHAN RAKHEIN
   const firebaseConfig = {
     apiKey: "AIzaSyBqbCQjenh92fm6x6QSg4JQAC_-XFUHesA",
     authDomain: "bambam-ai-121e3.firebaseapp.com",
@@ -1350,153 +1353,153 @@ document.getElementById('clearHistoryBtn').onclick = (e) => {
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  const db = getFirestore(app);
   const googleProvider = new GoogleAuthProvider();
 
+  // 3. AUTH FORMS LOGIC (Aapka purana code jo sahi chal raha tha)
   const authContainer = document.getElementById('authContainer');
   const loginForm = document.getElementById('loginForm');
   const signupForm = document.getElementById('signupForm');
+  
+  if (document.getElementById('toSignup')) {
+    document.getElementById('toSignup').onclick = (e) => { e.preventDefault(); loginForm.style.display='none'; signupForm.style.display='block'; };
+  }
+  if (document.getElementById('toLogin')) {
+    document.getElementById('toLogin').onclick = (e) => { e.preventDefault(); signupForm.style.display='none'; loginForm.style.display='block'; };
+  }
 
-  document.getElementById('toSignup').onclick = (e) => { e.preventDefault(); loginForm.style.display='none'; signupForm.style.display='block'; };
-  document.getElementById('toLogin').onclick = (e) => { e.preventDefault(); signupForm.style.display='none'; loginForm.style.display='block'; };
+  if (document.getElementById('googleLoginBtn')) {
+    document.getElementById('googleLoginBtn').onclick = async () => {
+      try { await signInWithPopup(auth, googleProvider); } 
+      catch (error) { alert('Google Login Error: ' + error.message); }
+    };
+  }
 
-  // Google Login Logic
-  document.getElementById('googleLoginBtn').onclick = async () => {
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (error) {
-      alert('Google Login Error: ' + error.message);
-    }
-  };
+  if (document.getElementById('doSignupBtn')) {
+    document.getElementById('doSignupBtn').onclick = async () => {
+      const email = document.getElementById('signupEmail').value;
+      const password = document.getElementById('signupPassword').value;
+      if(!email || !password) { alert('Sari fields bharein!'); return; }
+      try { await createUserWithEmailAndPassword(auth, email, password); alert('Account create ho gaya!'); } 
+      catch (error) { alert('Sign Up Error: ' + error.message); }
+    };
+  }
 
-  // Email Sign Up Logic
-  document.getElementById('doSignupBtn').onclick = async () => {
-    const email = document.getElementById('signupEmail').value;
-    const password = document.getElementById('signupPassword').value;
-    if(!email || !password) { alert('Sari fields bharein!'); return; }
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      alert('Account create ho gaya!');
-    } catch (error) {
-      alert('Sign Up Error: ' + error.message);
-    }
-  };
+  if (document.getElementById('doLoginBtn')) {
+    document.getElementById('doLoginBtn').onclick = async () => {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      if(!email || !password) { alert('Sari fields bharein!'); return; }
+      try { await signInWithEmailAndPassword(auth, email, password); } 
+      catch (error) { alert('Login Error: ' + error.message); }
+    };
+  }
 
-  // Email Log In Logic
-  document.getElementById('doLoginBtn').onclick = async () => {
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    if(!email || !password) { alert('Sari fields bharein!'); return; }
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-      alert('Login Error: ' + error.message);
-    }
-  };
-
-  // Monitor Auth State (Check Login Status)
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      authContainer.style.display = 'none';
-    } else {
-      authContainer.style.display = 'flex';
-    }
-  });
-// Automatic Login/Logout (Buttons Hide/Show Logic)
+  // 4. AUTOMATIC BUTTON HIDE/SHOW LOGIC (Perfected)
   onAuthStateChanged(auth, (user) => {
     const mainLoginBtn = document.getElementById('loginBtn');
-    const mainSignUpBtn = document.getElementById('signupBtn'); // Sign Up Free Button
+    const mainSignUpBtn = document.getElementById('signupBtn');
 
     if (user) {
-      // 1. Agar user logged in hai, toh parda hatao
-      if(typeof authContainer !== 'undefined') authContainer.style.display = 'none'; 
-      
-      // 2. Login button ko Logout banao
-      if(mainLoginBtn) {
-        mainLoginBtn.innerText = "Logout";
-        mainLoginBtn.onclick = () => {
-          auth.signOut().then(() => { alert("Logged out successfully!"); });
-        };
-      }
-      
-      // 3. Sign Up Free button ko bilkul CHUPAO (Hide)
-      if(mainSignUpBtn) {
-        mainSignUpBtn.style.display = 'none';
-      }
-
-    } else {
-      // 4. Agar user logged out hai, toh parda dikhao
-      if(typeof authContainer !== 'undefined') authContainer.style.display = 'flex';
-      
-      // 5. Logout hone par wapas normal Login button banao
-      if(mainLoginBtn) {
-        mainLoginBtn.innerText = "Login";
-        mainLoginBtn.onclick = () => { 
-          if(typeof authContainer !== 'undefined') authContainer.style.display = 'flex'; 
-        };
-      }
-      
-      // 6. Logout hone par Sign Up button ko WAPAS DIKHAO
-      if(mainSignUpBtn) {
-        mainSignUpBtn.style.display = 'inline-block';
-      }
-    }
-  });
-// ---- REALTIME AUTH STATE MONITOR (BUTTON HIDE/SHOW LOGIC) ----
-  onAuthStateChanged(auth, (user) => {
-    // Aapke original HTML ke mutabiq sahi IDs aur Classes ko pakadna
-    const mainLoginBtn = document.getElementById('loginBtn');
-    // Class 'signup' wale button ko fetch karna (jo Sign Up Free button hai)
-    const mainSignUpBtn = document.querySelector('.auth-btn.signup');
-    const authOverlay = document.getElementById('authContainer');
-
-    if (user) {
-      console.log("User successfully logged in:", user.email);
-      
-      // 1. Agar user logged in hai, toh login ka parda hatao
-      if (authOverlay) {
-        authOverlay.style.display = 'none';
-      }
-      
-      // 2. Main top header ke Login button ka text 'Logout' karo
+      if (authContainer) authContainer.style.display = 'none';
       if (mainLoginBtn) {
         mainLoginBtn.innerText = "Logout";
-        mainLoginBtn.onclick = async () => {
-          try {
-            await auth.signOut();
-            alert("Logged out successfully!");
-          } catch (err) {
-            alert("Logout Error: " + err.message);
-          }
-        };
+        mainLoginBtn.onclick = () => auth.signOut();
       }
-      
-      // 3. 'Sign Up Free' button ko bilkul CHUPAO (Hide)
-      if (mainSignUpBtn) {
-        mainSignUpBtn.style.display = 'none';
-      }
-
+      if (mainSignUpBtn) mainSignUpBtn.style.display = 'none';
     } else {
-      console.log("User is currently logged out.");
-      
-      // 4. Agar user login nahi hai, toh login parda (Overlay) wapas dikhao
-      if (authOverlay) {
-        authOverlay.style.display = 'flex';
-      }
-      
-      // 5. Logout hone par ya outside click par button ko wapas normal 'Login' banao
+      if (authContainer) authContainer.style.display = 'flex';
       if (mainLoginBtn) {
-        mainLoginBtn.innerText = "Login";
-        mainLoginBtn.onclick = () => {
-          if (authOverlay) authOverlay.style.display = 'flex';
-        };
+        mainLoginBtn.innerText = "Log in";
+        mainLoginBtn.onclick = () => { if (authContainer) authContainer.style.display = 'flex'; };
       }
-      
-      // 6. Sign Up button ko WAPAS DIKHAO (Show)
-      if (mainSignUpBtn) {
-        mainSignUpBtn.style.display = 'inline-block';
-      }
+      if (mainSignUpBtn) mainSignUpBtn.style.display = 'inline-block';
     }
   });
+
+  // 5. ADMIN PANEL DATABASE LOGIC
+  const secretAdminBtn = document.getElementById('adminLoginBtn');
+  const mainAdminPanel = document.getElementById('adminPanel');
+
+  if (secretAdminBtn) {
+    secretAdminBtn.onclick = () => {
+      const pass = prompt("Enter Admin Password:");
+      if (pass === "12345") {
+        if (mainAdminPanel) mainAdminPanel.style.display = 'block';
+      } else {
+        alert("Access Denied!");
+      }
+    };
+  }
+
+  // Load Models Realtime
+  onSnapshot(collection(db, "ai_models"), (snapshot) => {
+    const adminList = document.getElementById('adminModelList');
+    if (adminList) adminList.innerHTML = '';
+    
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      
+      // Update Admin List
+      if (adminList) {
+        const li = document.createElement('li');
+        li.style.marginBottom = "8px";
+        li.innerHTML = `<span style="color:#fff;">${data.name}</span> <span style="color:#888; font-size: 11px;">(${data.model})</span> 
+        <button onclick="window.removeAiModel('${docSnap.id}')" style="margin-left:15px; background:transparent; color:#ef4444; border:1px solid #ef4444; border-radius:4px; padding:2px 6px; font-size:11px; cursor:pointer;">Delete</button>`;
+        adminList.appendChild(li);
+      }
+    });
+  });
+
+  // Add New AI Model Function
+  window.addNewAiModel = async function() {
+    const name = document.getElementById('newAiName').value;
+    const model = document.getElementById('newAiModel').value;
+    const url = document.getElementById('newAiUrl').value;
+    const key = document.getElementById('newAiKey').value;
+    
+    if (!name || !model || !url || !key) { alert("Sari fields bhariye!"); return; }
+    const docId = model.toLowerCase().replace(/\s+/g, '-');
+    
+    try {
+      await setDoc(doc(db, "ai_models", docId), { name, model, baseUrl: url, apiKey: key });
+      alert("AI Model added!");
+      document.getElementById('newAiName').value = '';
+      document.getElementById('newAiModel').value = '';
+      document.getElementById('newAiUrl').value = '';
+      document.getElementById('newAiKey').value = '';
+    } catch (e) { alert("Error: " + e.message); }
+  };
+
+  // Remove AI Model Function
+  window.removeAiModel = async function(id) {
+    if (confirm("Sach mein is model ko delete karna hai?")) {
+      try { await deleteDoc(doc(db, "ai_models", id)); alert("Model Deleted!"); } 
+      catch (e) { alert("Error: " + e.message); }
+    }
+  };
 </script>
+
+<div id="adminPanel" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 25px; border: 1px solid var(--border-tint); border-radius: 12px; background: var(--panel-glass-strong); color: var(--text-primary); display: none; box-shadow: 0 4px 40px rgba(0,0,0,0.8); z-index: 999999; min-width: 350px;">
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <h3 style="margin: 0; color: var(--blue);">Admin Panel</h3>
+    <button onclick="document.getElementById('adminPanel').style.display='none'" style="background:transparent; border:none; color:white; cursor:pointer; font-size:16px;">✖</button>
+  </div>
+  <p style="font-size: 13px; color: var(--text-secondary); margin-top: 5px;">Manage AI Models</p>
+  <hr style="border: 0; border-top: 1px solid var(--border-tint); margin: 15px 0;">
+  
+  <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+    <input type="text" id="newAiName" placeholder="Display Name (e.g. GPT-4)" style="padding: 10px; background: var(--bg-deep); border: 1px solid var(--border-tint); border-radius: 6px; color: #fff;">
+    <input type="text" id="newAiModel" placeholder="Model ID (e.g. gpt-4)" style="padding: 10px; background: var(--bg-deep); border: 1px solid var(--border-tint); border-radius: 6px; color: #fff;">
+    <input type="text" id="newAiUrl" placeholder="Base URL" style="padding: 10px; background: var(--bg-deep); border: 1px solid var(--border-tint); border-radius: 6px; color: #fff;">
+    <input type="text" id="newAiKey" placeholder="API Key" style="padding: 10px; background: var(--bg-deep); border: 1px solid var(--border-tint); border-radius: 6px; color: #fff;">
+    <button onclick="addNewAiModel()" style="padding: 10px; background: var(--blue); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 5px;">Add Model to Database</button>
+  </div>
+  <ul id="adminModelList" style="padding-left: 20px; margin: 0; max-height: 150px; overflow-y: auto;"></ul>
+</div>
+
+<button id="adminLoginBtn" style="position: fixed; bottom: 15px; left: 15px; opacity: 0.2; background: transparent; color: var(--text-secondary); border: 1px solid var(--border-tint); font-size: 11px; padding: 4px 8px; cursor: pointer; border-radius: 4px; z-index: 9999;">Admin</button>
+
 </body>
 </html>
+
