@@ -1392,26 +1392,15 @@ document.getElementById('clearHistoryBtn').onclick = (e) => {
       alert('Login Error: ' + error.message);
     }
   };
-
-  // Monitor Auth State (Check Login Status)
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      authContainer.style.display = 'none';
-    } else {
-      authContainer.style.display = 'flex';
-    }
-  });
-  // Automatic Login/Logout Logic
+// Automatic Login/Logout Logic (With Sign Up Hide)
   onAuthStateChanged(auth, (user) => {
     const mainLoginBtn = document.getElementById('loginBtn');
-    
-    // Aapki website ke "Sign Up Free" button ko dhoondhne ke liye (HTML class ke hisab se)
-    const signUpFreeBtn = document.querySelector('.top-btn-signup') || document.querySelector('.signup-btn'); 
+    const mainSignUpBtn = document.getElementById('signupBtn'); // Aapka Sign Up Free button
 
     if (user) {
       authContainer.style.display = 'none'; 
       
-      // 1. Login button ko Logout banao
+      // 1. Login button ko Logout mein badlo
       if(mainLoginBtn) {
         mainLoginBtn.innerText = "Logout";
         mainLoginBtn.onclick = () => {
@@ -1419,23 +1408,23 @@ document.getElementById('clearHistoryBtn').onclick = (e) => {
         };
       }
       
-      // 2. Sign Up Free button ko automatic GAYAB kar do
-      if(signUpFreeBtn) {
-        signUpFreeBtn.style.display = 'none';
+      // 2. Sign Up Free button ko chupao (Hide)
+      if(mainSignUpBtn) {
+        mainSignUpBtn.style.display = 'none';
       }
 
     } else {
       authContainer.style.display = 'flex';
       
-      // 3. Wapas normal Login button banao
+      // 3. Logout hone par wapas normal Login button banao
       if(mainLoginBtn) {
         mainLoginBtn.innerText = "Login";
         mainLoginBtn.onclick = () => { authContainer.style.display = 'flex'; };
       }
       
-      // 4. Logout hone par Sign Up Free button ko WAPAS DIKHAO
-      if(signUpFreeBtn) {
-        signUpFreeBtn.style.display = 'inline-block';
+      // 4. Logout hone par Sign Up button ko WAPAS DIKHAO (Show)
+      if(mainSignUpBtn) {
+        mainSignUpBtn.style.display = 'inline-block';
       }
     }
   });
