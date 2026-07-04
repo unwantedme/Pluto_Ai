@@ -1610,7 +1610,9 @@ document.getElementById('clearHistoryBtn').onclick = (e) => {
   });
 
   // ================= Admin Control Panel (Firestore) =================
-  const dbAdmin = getFirestore(app);
+  // db is mapped to the SAME app/firebaseConfig initialized above, so it
+  // reads/writes the exact Firestore instance tied to your project.
+  const db = getFirestore(app);
   const adminToggleBtn = document.getElementById('adminToggleBtn');
   const adminPanel = document.getElementById('adminPanel');
   const adminModelListEl = document.getElementById('adminModelList');
@@ -1648,9 +1650,12 @@ document.getElementById('clearHistoryBtn').onclick = (e) => {
     });
   }
 
+  // Real-time Firestore listener on the "ai_models" collection.
+  // Runs for EVERY user (not just the admin) as soon as the page loads,
+  // so models persist across refreshes and populate for all visitors.
   function startAdminListener(){
-    if(adminUnsubscribe) return; // already listening
-    adminUnsubscribe = onSnapshot(collection(dbAdmin, 'ai_models'), (snapshot) => {
+    if(adminUnsubscribe) return; // already listening, avoid duplicate subscriptions
+    adminUnsubscribe = onSnapshot(collection(db, 'ai_models'), (snapshot) => {
       const models = [];
       snapshot.forEach(docSnap => {
         models.push({ id: docSnap.id, ...docSnap.data() });
@@ -1665,11 +1670,18 @@ document.getElementById('clearHistoryBtn').onclick = (e) => {
     });
   }
 
+  // Start listening immediately on page load — this is what keeps models
+  // populated for everyone after a refresh, independent of the admin panel.
+  startAdminListener();
+
   adminToggleBtn.onclick = () => {
     const pass = prompt('Enter admin password:');
     if(pass === '12345'){
       adminPanel.classList.add('open');
-      startAdminListener();
+      // listener is already running from page load; re-render immediately
+      // with whatever we've already received in case snapshot fired before
+      // the panel existed in view.
+      renderAdminModelList(latestAdminModels);
     } else if(pass !== null){
       alert('Incorrect password.');
     }
@@ -1696,7 +1708,7 @@ document.getElementById('clearHistoryBtn').onclick = (e) => {
     const docId = toKebabCase(modelId);
 
     try {
-      await setDoc(doc(dbAdmin, 'ai_models', docId), {
+      await setDoc(doc(db, 'ai_models', docId), {
         displayName, modelId, baseUrl, apiKey,
         updatedAt: Date.now()
       });
@@ -1712,7 +1724,7 @@ document.getElementById('clearHistoryBtn').onclick = (e) => {
   window.removeAiModel = async function(modelDocId){
     if(!confirm('Delete this model?')) return;
     try {
-      await deleteDoc(doc(dbAdmin, 'ai_models', modelDocId));
+      await deleteDoc(doc(db, 'ai_models', modelDocId));
     } catch (error) {
       alert('Error deleting model: ' + error.message);
     }
