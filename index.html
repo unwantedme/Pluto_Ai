@@ -1401,6 +1401,25 @@ document.getElementById('clearHistoryBtn').onclick = (e) => {
       authContainer.style.display = 'flex';
     }
   });
+  // Automatic Login/Logout Logic
+  onAuthStateChanged(auth, (user) => {
+    const mainLoginBtn = document.getElementById('loginBtn');
+    if (user) {
+      authContainer.style.display = 'none'; 
+      if(mainLoginBtn) {
+        mainLoginBtn.innerText = "Logout";
+        mainLoginBtn.onclick = () => {
+          auth.signOut().then(() => { alert("Logged out successfully!"); });
+        };
+      }
+    } else {
+      authContainer.style.display = 'flex';
+      if(mainLoginBtn) {
+        mainLoginBtn.innerText = "Login";
+        mainLoginBtn.onclick = () => { authContainer.style.display = 'flex'; };
+      }
+    }
+  });
 </script>
 </body>
 </html>
