@@ -1428,6 +1428,129 @@ document.getElementById('clearHistoryBtn').onclick = (e) => {
       }
     }
   });
+  // --- ADMIN AND DATABASE LOGIC ---
+  const adminLoginBtn = document.getElementById('adminLoginBtn');
+  const adminPanel = document.getElementById('adminPanel');
+
+  if(adminLoginBtn) {
+    adminLoginBtn.onclick = () => {
+      const password = prompt("Enter Admin Password:");
+      if (password === "12345") { // <--- Aap apna secret password yahan badal sakte hain
+        adminPanel.style.display = 'block';
+        loadAdminModels(); 
+      } else {
+        alert("Wrong Password!");
+      }
+    };
+  }
+
+  // Firebase se Firestore database tools manga rahe hain
+  import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.3/firebase-firestore.js";
+  const db = getFirestore();
+
+  // Yeh code automatic sabhi users ke dropdown ko automatic real-time update rakhega
+  onSnapshot(collection(db, "ai_models"), (snapshot) => {
+    const providerSelect = document.getElementById('providerSelect'); // Aapke dropdown select ki ID
+    if(!providerSelect) return;
+    
+    providerSelect.innerHTML = ''; 
+    window.globalProviders = {}; // Global memory keys hold karne ke liye
+
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      
+      // Dropdown mein naya model option jodna
+      const option = document.createElement('option');
+      option.value = doc.id;
+      option.innerText = data.name;
+      providerSelect.appendChild(option);
+
+      // System ke liye model ki details save karna
+      window.globalProviders[doc.id] = data;
+    });
+  });
+
+  // ADMIN FUNCTION: Naya AI Model Add Karna
+  async function addNewAiModel() {
+    const name = document.getElementById('newAiName').value;
+    const model = document.getElementById('newAiModel').value;
+    const url = document.getElementById('newAiUrl').value;
+    const key = document.getElementById('newAiKey').value;
+
+    if(!name || !model || !url || !key) {
+      alert("Please fill all fields!");
+      return;
+    }
+
+    const docId = model.toLowerCase().replace(/\s+/g, '-');
+
+    try {
+      await setDoc(doc(db, "ai_models", docId), {
+        name: name,
+        model: model,
+        baseUrl: url,
+        apiKey: key
+      });
+      alert("AI Model added successfully!");
+      // Inputs khali karein
+      document.getElementById('newAiName').value = '';
+      document.getElementById('newAiModel').value = '';
+      document.getElementById('newAiUrl').value = '';
+      document.getElementById('newAiKey').value = '';
+    } catch (e) {
+      alert("Error adding model: " + e.message);
+    }
+  }
+
+  // ADMIN FUNCTION: AI Model Remove Karna
+  async function removeAiModel(id) {
+    if(confirm("Are you sure you want to remove this AI model?")) {
+      await deleteDoc(doc(db, "ai_models", id));
+      alert("AI Model removed!");
+    }
+  }
+
+  // Admin panel ke andar active models ki list show karna
+  function loadAdminModels() {
+    onSnapshot(collection(db, "ai_models"), (snapshot) => {
+      const adminList = document.getElementById('adminModelList');
+      if(!adminList) return;
+      adminList.innerHTML = '';
+      
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        const li = document.createElement('li');
+        li.style.marginBottom = "5px";
+        li.innerHTML = `${data.name} (${data.model}) <button onclick="removeAiModel('${doc.id}')" style="color:red; background:none; border:1px solid red; border-radius:3px; cursor:pointer; margin-left:10px; padding:2px 5px;">Remove</button>`;
+        adminList.appendChild(li);
+      });
+    });
+  }
+
+  // Functions ko HTML buttons ke liye activate karna
+  window.addNewAiModel = addNewAiModel;
+  window.removeAiModel = removeAiModel;
+
+  // --- AAPKA AUTOMATIC LOGIN/LOGOUT CODE ---
+  onAuthStateChanged(auth, (user) => {
+    const mainLoginBtn = document.getElementById('loginBtn');
+    const mainSignUpBtn = document.getElementById('signupBtn');
+    if (user) {
+      authContainer.style.display = 'none'; 
+      if(mainLoginBtn) {
+        mainLoginBtn.innerText = "Logout";
+        mainLoginBtn.onclick = () => { auth.signOut().then(() => { alert("Logged out!"); }); };
+      }
+      if(mainSignUpBtn) { mainSignUpBtn.style.display = 'none'; }
+    } else {
+      authContainer.style.display = 'flex';
+      if(mainLoginBtn) {
+        mainLoginBtn.innerText = "Login";
+        mainLoginBtn.onclick = () => { authContainer.style.display = 'flex'; };
+      }
+      if(mainSignUpBtn) { mainSignUpBtn.style.display = 'inline-block'; }
+    }
+  });
 </script>
 </script> <div id="adminPanel" style="margin: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 8px; background: #f9f9f9; display: none;">
   <h3 style="color: #333; margin-top: 0;">Admin Panel - Manage AI Models</h3>
